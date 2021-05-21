@@ -1,4 +1,5 @@
 
+
 translate.in.statement <- function(in.statement, the.variables, in.symbol = "%in%", envir = .GlobalEnv){
 
   all.characters <- strsplit(x = trimws(x = in.statement), split = "")[[1]]

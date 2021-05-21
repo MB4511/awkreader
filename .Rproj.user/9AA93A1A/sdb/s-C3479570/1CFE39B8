@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "Package: awkreader\nType: Package\nTitle: What the Package Does (Title Case)\nVersion: 0.1.0\nAuthors@R: c(\n    person(\"David\", \"Shilane\", , \"david.shilane@columbia.edu\", c(\"aut\")),\n    person(\"Caffrey\", \"Lee\", , \"caffrey.w.lee@gmail.com\", c(\"ctb\")),\n    person(\"Mayur\", \"Bansal\", , \"mb4511@columbia.edu\", c(\"ctb\",\"cre\"))\n    )\nDescription: More about what it does (maybe more than one line)\n    Use four spaces when indenting paragraphs within the Description.\nLicense: What license is it under?\nEncoding: UTF-8\nLazyData: true\nRoxygenNote: 7.1.1\nSuggests: \n    knitr,\n    rmarkdown\nVignetteBuilder: knitr\n",
+    "created" : 1621615535988.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2215013316",
+    "id" : "1CFE39B8",
+    "lastKnownWriteTime" : 1621616245,
+    "last_content_update" : 1621616245,
+    "path" : "~/Desktop/awkreader/awkreader/DESCRIPTION",
+    "project_path" : "DESCRIPTION",
+    "properties" : {
+    },
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "dcf"
+}

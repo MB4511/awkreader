@@ -1,0 +1,8 @@
+"0","#source(""awkreader.R"")"
+"0","#all.files <- list.files(path = normalizePath(path = ""data/ratings data""), full.names = T)"
+"0","all.files <- list.files(path = ""awkreader/awkreader/data/ratings data"", full.names = T)"
+"0","the.files <- all.files[1:2]"
+"0","combined.fread(the.files = the.files)"
+"2","Error in fread(input = ""NA"", nrows = 1) : 
+  File 'NA' does not exist or is non-readable. getwd()=='/Users/mayurbansal/Desktop/awkreader/awkreader/vignettes'
+"

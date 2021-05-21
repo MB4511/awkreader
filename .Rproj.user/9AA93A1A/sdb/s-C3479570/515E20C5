@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "library(devtools)\nlibrary(awkreader)\n\n2\\2##writes namespace and man [.Rd] files\ndevtools::document()\n\n##locally checks the package\ndevtools::check()\n\nusethis::use_vignette(\"Introduction_to_awkreader\")\n\n#builds vignette\ndevtools::build_vignettes()\n\n#devtools::install(pkg = \"DTwrappers\")\n\n#devtools::install(build_vignette = FALSE)\n\n\n## BUILDS PACKAGE LOCALLY [opportunity to test r cmd check as cran][R CMD check --as-cran]\ndevtools::build()\n\n##window check\ndevtools::revdep(\"DTwrappers\",dependencies = c(\"Depends\", \"Imports\", \"Suggests\",\n                                               \"LinkingTo\"), recursive = FALSE, ignore = NULL,\n                 bioconductor = FALSE)\n\n## travis check\nusethis::use_travis()\n\n\n\n## use package down to resolve vignette in\nusethis::use_pkgdown()\n\nusethis::use_cran_comments()\n\n## results do not show the error and warning for latex issue to view pdf\n\ndevtools::check_rhub()\n\ntinytex::install_tinytex() ## to resolve latex issues on my machine locally\n\ndevtools::build_vignettes()\ndevtools::install(build_vignettes = TRUE)\nbrowseVignettes('getDTeval')\ndevtools::document()\n\ntravis::use_travis_deploy()\n\n\n\ntyp=formulaic::snack.dat\n\ndevtools::package_file(path = '/Users/mayurbansal/Desktop/getDTevalpackage/getDTeval')\n\n#usethis::use_build_ignore()\n\nusethis::use_testthat()\nusethis::use_test('getDteval')\n\ndevtools::document()\n\ndevtools::submit_cran()",
+    "created" : 1621615276245.000,
+    "dirty" : true,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "3533222473",
+    "id" : "515E20C5",
+    "lastKnownWriteTime" : 6,
+    "last_content_update" : 1621617267590,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 6,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

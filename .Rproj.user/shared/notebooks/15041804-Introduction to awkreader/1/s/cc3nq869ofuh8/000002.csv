@@ -1,0 +1,5 @@
+"0","combined.fread(the.files = the.files, the.variables = c(""item"", ""rating""), return.as = ""code"")"
+"1","[1]"
+"1"," ""awk -F ',' 'FNR < 2 { next }{ print $2,$3,FILENAME}' 'Data 2/ratings data/file_1.csv' 'Data 2/ratings data/file_10.csv'"""
+"1","
+"

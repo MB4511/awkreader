@@ -1,0 +1,256 @@
+---
+title: 'awkreader:  Pre-Filtering and Pattern Searching for Combined File Reading'
+author: "David Shilane"
+date: ""
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+Reading, aggregating, and subsetting data from files is a fundamental operation in many analyses in R.  Many methods of reading files are available through R and its extension packages.  The usual practice is to read in each file separately, input the entire data set, and then use subsequent calculations within R to perform aggregation and filtering.  Performing these steps as part of reading the files presents an opportunity to reduce the amount of computational memory and programming steps needed to produce the intended data set.  The Rawks package is constructed to solve these problem.  It provides simple methods to read multiple files, pre-filter the data as part of the reading, and to search for patterns in the records.
+
+The Rawks package is built on a translation of R code that produces coding statements in the AWK language.  This command-line code is sufficiently flexible to read multiple files, pre-filter the inputs, and search for patterns in the data.  AWK commands can be processed to read data using the **fread** function from the **data.table** package.  The Rawks package allows a user to specify simple inputs with a syntax familiar to users of R.  By translating the code, Rawks gives users access to some of the capabilities of programming in AWK without having to learn the language.
+
+The Rawks package introduces three new methods:
+
+* **combined.fread**:  A method to read multiple files of the same structure.
+
+* **filtered.fread**:  A method to introduce filtering conditions that are written in R's syntax.  Any row of data that satisfy's the filter's logical test will be included.  This can be employed while reading multiple files of the same structure.
+
+* **pattern.fread**:  A method to search for one or more patterns in the files.  Any row that matches the combination of specified patterns will be included.  This method may also be applied in reading multiple files of the same structure.
+
+These methods assume that the data in the files have a reasonably consistent structure.  The assumptions include:
+
+* Each file includes a header row.
+
+* The variables are formatted in the same order across the files.
+
+* Consistent delimiters are used.
+
+The applications of the Rawks package can be quite beneficial in the following contexts:
+
+* **Combined Reads**:  When the relevant data are stored in multiple files (e.g. by date or by account), using a single command to read and aggregate the files is more efficient and requires fewer programming steps.
+
+* **Filtered Reads**:  By applying the filtering logic within the reading process, the resulting data will only be a subset of the contents of the original files.  This reduces the data that is stored and used in R to only the relevant records.  In large file systems, this can introduce significant computational savings and extra data from a set of original files that would otherwise exceed the system's memory.
+
+* **Pattern Searching**:  Similarly, searching for patterns is a separate way of pre-filtering the data in the reading process.
+
+## Data Files
+
+In order to demonstrate the capabilities of the Rawks package, we have posted the following files to (fill in link):
+
+* **Ratings Data**:  This folder contains many files of simulated ratings.  Each file contains variables for the user's identifier, product's identifier, and an integer rating from 1 to 5.  The data are separated into individual files for each user. All of the files are comma separated values (CSV) files with the same headers and ordering of the variables.
+
+* **Titanic Data**:  A copy of the publicly available Titanic data -- also accessible using data(Titanic) in R -- is posted as a CSV file.
+
+
+
+## Examples
+
+Here we will demonstrate the usages of the Rawks package along with its capabilities in reading and filtering multiple files.
+
+For the purpose of the following examples, we will assume that the data files mentioned above are loaded in a local directory.
+
+### Using combined.fread
+
+The purpose of combined.fread is to read and aggregate data from multiple files.
+
+
+Here we will use list.files to generate a character vector of all of the ratings data files.  Then we will use combined.fread to read and aggregate the first two files.
+
+```{r }
+#source("awkreader.R")
+#all.files <- list.files(path = normalizePath(path = "data/ratings data"), full.names = T)
+
+all.files <- list.files(path = "data/ratings data", full.names = T)
+
+the.files <- all.files[1:2]
+
+combined.fread(the.files = the.files)
+```
+
+When specifying a value of **nrows**, the program will read in at most this number of rows of data.  The order is determined by the.files:
+
+```{r }
+combined.fread(the.files = the.files, nrows = 5)
+```
+
+The result includes a column (called "file" by default) that shows the source file of each row of data.  This is helpful for the purpose of aggregation.  The name of this column header can also be specified:
+
+```{r }
+combined.fread(the.files = the.files, nrows = 5, file.header = "source_file")
+```
+
+When not needed, the variable specifying the source file may be excluded by setting include.filename = FALSE:
+
+
+```{r }
+combined.fread(the.files = the.files, nrows = 5, include.filename = F)
+```
+
+
+It is also possible to specify which variables to include:
+
+```{r }
+combined.fread(the.files = the.files, the.variables = c("item", "rating"), nrows = 5)
+```
+
+The default value "." for the.variables will return all of the variables in the source files.  Additionally, if no valid variables are specified, then the method reverts to reading in all of the variables.
+
+The program is set to return the data as a data.table object by default.  However, this may be switched to a data.frame:
+
+```{r }
+combined.fread(the.files = the.files, the.variables = c("item", "rating"), nrows = 5, return.data.table = F)
+```
+
+It is also possible to specify variables that should not be included in the data using the drop parameter.  This may be specified by column index or name, as shown in the examples below:
+
+```{r }
+combined.fread(the.files = the.files, nrows = 5, drop = c(1,3), include.filename = F)
+
+combined.fread(the.files = the.files, nrows = 5, drop = c("user", "rating"), include.filename = F)
+```
+
+
+Rather than outputting the data, the method can be specified to instead display the AWK statements that would read in the data as shell commands:
+
+```{r }
+combined.fread(the.files = the.files, the.variables = c("item", "rating"), return.as = "code")
+```
+
+It is also possible to return a list object including both the resulting data and the code:
+
+```{r }
+combined.fread(the.files = the.files, the.variables = c("item", "rating"), nrows = 5, return.as = "all")
+```
+
+A few caveats apply to the AWK coding statements that are generated:
+
+* The column headers are separately added to the resulting data.  In this instance, directly running the AWK command will not produce the correct column headers alone.
+
+* The value of nrows is separately specified as part of data.table's fread method.  It is not directly included in the AWK coding statements.  When batching the data, an additional step is used in post-processing to limit the results to the number of rows.
+
+* When include.filename = TRUE and the filename includes spaces, the AWK code may spread the filename across multiple columns of data using the space as a delimiter.  In these circumstances, each method in the Rawks package includes a small cleanup procedure to properly reformat the filenames into a single column.
+
+### Using filtered.fread
+
+The filtered.fread method extends combined.fread by introducing the capability to apply filtering statements while reading the data.  The filters are written as logical tests using R's syntax.
+
+When no filter is applied (using NULL, NA, or a blank character string ""), the full data will be read.  Notice that most of the inputs to filtered.fread correspond to those of combined.fread:
+
+```{r }
+filtered.fread(the.files = the.files, the.filter = NULL, nrows = 5, include.filename = F)
+```
+
+Simple filters can then be introduced in a character value using language that follows R's coding syntax:
+
+```{r }
+## Write filtering language in R's syntax
+filtered.fread(the.files = the.files, the.filter = "rating == 5", nrows = 5)
+```
+
+More complex logical tests may be used.  Here we demonstrate the logical AND operator:
+
+```{r }
+filtered.fread(the.files = the.files, the.filter = "rating >= 3 & item == '1fg4sLgEFzAtOqCa'")
+```
+
+Note that in specifying a value for the item, it is provided in quotation marks that do not match the broader specification of the.filter.  If the outside quotations are double quotations, then the inside should be single quotation marks (and vice versa).
+
+```{r }
+filtered.fread(the.files = the.files, the.filter = 'rating >= 3 & item == "1fg4sLgEFzAtOqCa"')
+```
+
+The logical OR operator may also be used:
+
+```{r }
+filtered.fread(the.files = the.files, the.filter = 'rating == 3 | rating == 4', nrows = 5)
+```
+
+We can also use negations with the logical NOT operator:
+
+```{r }
+filtered.fread(the.files = the.files, the.filter = 'rating != 1 & rating != 2 & rating != 3 & rating != 4', nrows = 5)
+```
+
+R also includes a subsetting %in% operator that returns TRUE if the value of the left hand side equals at least one value in the right hand side:
+
+```{r }
+filtered.fread(the.files = the.files, the.filter = 'rating >= 3 & item %in% c("1fg4sLgEFzAtOqCa", "6qI9cBWT76jxm42G")')
+
+filtered.fread(the.files = the.files, the.filter = 'rating >= 3 & item %in% c("1fg4sLgEFzAtOqCa", "6qI9cBWT76jxm42G")', return.as = "code")
+```
+
+In the AWK coding statement, this use of %in% is translated to a series of OR statements for all of the values of the right hand side.  Keep in mind that this could lead to a very long translation for vectors with a large number of unique values.
+
+As an extension, filtered.fread is also designed to evaluate existing variables in R as part of the specification of the.filter:
+
+```{r }
+two.items <- c("1fg4sLgEFzAtOqCa", "6qI9cBWT76jxm42G")
+filtered.fread(the.files = the.files, the.filter = 'rating >= 3 & item %in% two.items', return.as = "all")
+```
+
+Notice here that the translated code is based on the value of the variable **two.items**.  This allows the method to use existing variables that are not contained within the scope of the files to be read by AWK.
+
+The logical NOT IN operator %nin% is used to negate an %in% operator.  While not standard to base R, %nin% is used by some extension packages.  In particular, (x %nin% y) is equivalent to !(x %in% y).
+
+```{r }
+filtered.fread(the.files = the.files, the.filter = 'rating %nin% c(1:2, 4)', nrows = 5)
+```
+
+With the possibility for complex filters and aggregations from many files, AWK's limits on the maximum length of a coding statement may be triggered.  In this case, the methods proceed with a batched approach that reads a fraction of the files at once.  The resulting data are aggregated.  However, when result = "all" or result = "code", the coding statements are returned as a vector based on the batches.
+
+In the following example, we will filter, read, and aggregate data from all 2000 data files in batches of 100.
+
+```{r }
+the.output <- filtered.fread(the.files = all.files, the.filter = 'rating >= 4 & item %in% two.items', include.filename = T, num.files.per.batch = 10, show.warnings = FALSE, return.as = "all", nrows = 5)
+
+print(the.output$result)
+print(the.output$code[1:2])
+```
+
+Some of the batches may include no relevant data that satisfies the.filter.  In those cases, a warning will be generated by data.table's fread command.  These warnings can be suppressed with show.warnings = FALSE.
+
+### Using pattern.fread
+
+As a complement to applying logical filters, pattern matching may also be used as a means of extracting a subset of data read from multiple files.
+
+Here we will extract the rows that match a specific pattern:
+
+```{r dfd}
+pattern.fread(the.files = the.files, the.patterns = "5n9ziP", return.as = "all")
+```
+
+It is also possible to search for negated patterns.  Here we use the **tf** parameter to specify whether a pattern should be searched for as it is (TRUE) or negated (FALSE).  When negated, pattern.fread returns the complement of what would otherwise be produced: 
+
+```{r }
+pattern.fread(the.files = the.files, the.patterns = "5n9ziP", tf = FALSE, return.as = "all")
+```
+
+When multiple patterns are supplied, they can be connected using logical operators.  Specifying "and" in the connectors parameter woul return records that include both patterns.
+
+```{r }
+pattern.fread(the.files = the.files, the.patterns = c("QPW5X7c", "ziPoS"), connectors = "and", return.as = "result")
+```
+
+It is also possible to connect patterns with an OR operator:
+
+```{r }
+pattern.fread(the.files = the.files, the.patterns = c("ThHYoPWn4IVJ", "ziPoS", "jTXm3t"), connectors = c("or", "or"))
+```
+
+When mixing AND and OR, the logical operation will proceed with no parentheses:
+
+```{r }
+pattern.fread(the.files = the.files, the.patterns = c("W5X7", "ziPoS", "jTXm3t"), connectors = c("and", "or"), return.as = "all")
+```
+
+Finally, we can turn to the Titanic data to search for specific patterns:
+
+```{r }
+pattern.fread(the.files = "Data 2/Titanic.csv", the.patterns = c("Female", "Child", "1st"), tf = c(T, T, F), connectors = c("or", "and"))
+```
